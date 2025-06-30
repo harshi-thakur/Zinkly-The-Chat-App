@@ -1,16 +1,8 @@
 import { Link, useLocation } from "react-router-dom"
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
-// Button component
-const Button = ({
-  children,
-  className,
-  ...props
-}) => (
-  <button className={`px-4 py-2 rounded font-medium transition-colors ${className}`} {...props}>
-    {children}
-  </button>
-)
+import { Button } from "./ui/button"
+
 export default function Header() {
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)

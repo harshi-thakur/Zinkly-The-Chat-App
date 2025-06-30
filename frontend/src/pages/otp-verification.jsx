@@ -1,152 +1,68 @@
-import { useState, useRef, useEffect } from "react"
-import { Link, useLocation, useNavigate } from "react-router-dom"
+import { useState, useRef, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  handleChangeOtp,
+  handleKeyDownOtp,
+  handlePasteOtp,
+  handleOtpSubmit
+} from "../handlers/otpHandlers";
+import useOtpTimer from "../hooks/useOtpTimer";
 
 
 export default function OTPVerification() {
-    const appName= import.meta.env.VITE_APP_NAME;
-    const [otp, setOtp] = useState(new Array(6).fill(""))
-    const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState("")
-    const [resendTimer, setResendTimer] = useState(30)
-    const [canResend, setCanResend] = useState(false)
-    const inputRefs = useRef([])
-    const navigate = useNavigate()
-    const location = useLocation()
+  const appName = import.meta.env.VITE_APP_NAME;
+  const [otp, setOtp] = useState(new Array(6).fill(""));
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const inputRefs = useRef([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { email, name } = location.state || {};
 
-  const { email, name } = location.state || {}
-  // Timer for resend functionality
+  const { resendTimer, canResend, resetTimer } = useOtpTimer(30);
+
   useEffect(() => {
-    if (resendTimer > 0) {
-      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000)
-      return () => clearTimeout(timer)
-    } else {
-      setCanResend(true)
-    }
-  }, [resendTimer])
+    if (!email) navigate("/");
+  }, [email, navigate]);
 
-    useEffect(()=>{
-        if(!email)
-        navigate("/");
-    },[email,navigate])
-  const handleChange = (element, index) => {
-    const value = element.value
 
-    // Only allow numbers
-    if (!/^\d*$/.test(value)) return
+const resetOtp = () => {
+  setOtp(new Array(6).fill(""));
+  setError("");
+  inputRefs.current[0]?.focus();
+};
 
-    const newOtp = [...otp]
-    newOtp[index] = value.slice(-1) // Only take the last character
-    setOtp(newOtp)
-    setError("")
-
-    // Move to next input if current field is filled
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus()
-    }
-
-    // Auto-submit when all fields are filled
-    if (newOtp.every((digit) => digit !== "") && index === 5) {
-      handleSubmit(newOtp.join(""))
-    }
-  }
-
-  const handleKeyDown = (e) => {
-    // Move to previous input on backspace if current input is empty
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus()
-    }
-
-    // Move to next input on arrow right
-    if (e.key === "ArrowRight" && index < 5) {
-      inputRefs.current[index + 1]?.focus()
-    }
-
-    // Move to previous input on arrow left
-    if (e.key === "ArrowLeft" && index > 0) {
-      inputRefs.current[index - 1]?.focus()
-    }
-
-    // Submit on Enter if all fields are filled
-    if (e.key === "Enter" && otp.every((digit) => digit !== "")) {
-      handleSubmit(otp.join(""))
-    }
-  }
-
-  const handlePaste = (e) => {
-    e.preventDefault()
-    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6)
-
-    if (pastedData.length === 6) {
-      const newOtp = pastedData.split("")
-      setOtp(newOtp)
-      setError("")
-
-      // Focus the last input
-      inputRefs.current[5]?.focus()
-
-      // Auto-submit
-      handleSubmit(pastedData)
-    }
-  }
-
-  const handleSubmit = async (otpValue) => {
-    const otpToVerify = otpValue || otp.join("")
-
-    if (otpToVerify.length !== 6) {
-      setError("Please enter all 6 digits")
-      return
-    }
-
-    setIsLoading(true)
-    setError("")
-
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Simulate verification logic
-      if (otpToVerify === "123456") {
-        // Success - redirect to dashboard or home
-        navigate("/")
-      } else {
-        setError("Invalid OTP. Please try again.")
-        // Clear OTP on error
-        setOtp(new Array(6).fill(""))
-        inputRefs.current[0]?.focus()
-      }
-    } catch (err) {
-      setError("Verification failed. Please try again.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
+const handleSubmit = () => {
+  handleOtpSubmit({
+    otp,
+    setError,
+    setIsLoading,
+    navigate,
+    resetOtp,
+  });
+};
 
   const handleResend = async () => {
-    if (!canResend) return
-
-    setCanResend(false)
-    setResendTimer(30)
-    setError("")
-
+    if (!canResend) return;
+    resetTimer();
+    setError("");
     try {
-      // Simulate resend API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      // Show success message or handle resend logic
-    } catch (err) {
-      setError("Failed to resend OTP. Please try again.")
+      await new Promise((res) => setTimeout(res, 1000));
+    } catch {
+      setError("Failed to resend OTP. Please try again.");
     }
-  }
+  };
 
   const clearOtp = () => {
-    setOtp(new Array(6).fill(""))
-    setError("")
-    inputRefs.current[0]?.focus()
-  }
+    setOtp(new Array(6).fill(""));
+    setError("");
+    inputRefs.current[0]?.focus();
+  };
+
   return (
     <div className="min-h-screen bg-[#D8EDC2] flex items-center justify-center p-4">
       <div className="w-full max-w-md transform hover:scale-105 transition-transform duration-300">
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden p-8">
-          {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2 mb-6">
               <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center">
@@ -154,7 +70,7 @@ export default function OTPVerification() {
               </div>
               <span className="text-2xl font-bold text-black">{appName}</span>
             </div>
-             <h1 className="text-3xl font-bold text-black mb-2">Welcome {name}</h1>
+            <h1 className="text-3xl font-bold text-black mb-2">Welcome {name}</h1>
             <h1 className="text-3xl font-bold text-black mb-2">Verify Your Account</h1>
             <p className="text-gray-600">
               We've sent a 6-digit verification code to
@@ -163,7 +79,6 @@ export default function OTPVerification() {
             </p>
           </div>
 
-          {/* OTP Input */}
           <div className="mb-6">
             <div className="flex justify-center gap-3 mb-4">
               {otp.map((digit, index) => (
@@ -174,9 +89,9 @@ export default function OTPVerification() {
                   inputMode="numeric"
                   maxLength={1}
                   value={digit}
-                  onChange={(e) => handleChange(e.target, index)}
-                  onKeyDown={(e) => handleKeyDown(e, index)}
-                  onPaste={index === 0 ? handlePaste : undefined}
+                  onChange={(e) => handleChangeOtp(index, otp, setOtp, setError, inputRefs, handleSubmit)(e.target)}
+                  onKeyDown={(e) => handleKeyDownOtp(e, index, otp, inputRefs, handleSubmit)}
+                  onPaste={index === 0 ? (e) => handlePasteOtp(e, setOtp, setError, inputRefs, handleSubmit) : undefined}
                   className={`w-12 h-12 text-center text-xl font-bold border-2 rounded-lg transition-all duration-200 ${
                     error
                       ? "border-red-500 bg-red-50"
@@ -188,11 +103,7 @@ export default function OTPVerification() {
                 />
               ))}
             </div>
-
-            {/* Error Message */}
             {error && <div className="text-center text-red-500 text-sm mb-4 animate-pulse">{error}</div>}
-
-            {/* Loading State */}
             {isLoading && (
               <div className="text-center text-gray-600 text-sm mb-4">
                 <div className="inline-flex items-center gap-2">
@@ -203,7 +114,6 @@ export default function OTPVerification() {
             )}
           </div>
 
-          {/* Action Buttons */}
           <div className="space-y-4">
             <button
               onClick={() => handleSubmit()}
@@ -212,7 +122,6 @@ export default function OTPVerification() {
             >
               {isLoading ? "Verifying..." : "Verify OTP"}
             </button>
-
             <button
               onClick={clearOtp}
               disabled={isLoading}
@@ -222,7 +131,6 @@ export default function OTPVerification() {
             </button>
           </div>
 
-          {/* Resend Section */}
           <div className="mt-6 text-center">
             <p className="text-gray-600 text-sm mb-2">Didn't receive the code?</p>
             {canResend ? (
@@ -234,7 +142,6 @@ export default function OTPVerification() {
             )}
           </div>
 
-          {/* Back Link */}
           <div className="mt-6 text-center">
             <Link to="/signup" className="text-gray-600 hover:text-black transition-colors text-sm">
               ← Back to Sign Up
@@ -243,5 +150,5 @@ export default function OTPVerification() {
         </div>
       </div>
     </div>
-  )
+  );
 }
