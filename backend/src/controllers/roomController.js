@@ -1,4 +1,4 @@
-import { createRoomByUserId, getRoomByUserId, getRoomsByUserId } from "../queries/room.js";
+import { createRoomByUserId, getRoomByUserId, getRoomsByUserId, updateRoomById } from "../queries/room.js";
 import { isValidUserId } from "../queries/user.js";
 
 export const getRooms=async(req, res) => {
@@ -7,8 +7,8 @@ export const getRooms=async(req, res) => {
         if (page < 1) {
             return res.status(400).json({ error: "Page number must be greater than 0" });
         }
-        const rooms = await getRoomsByUserId(req.user.id,page);
-        res.status(200).json(rooms);
+        const rooms = await getRoomsByUserId(req.user.id);
+        res.status(200).json({rooms});
     } catch (e) {
         console.log("Error in getRooms controller " + e.message);
         res.status(500).json({ error: "Internal Server error" });
@@ -51,20 +51,20 @@ export const createRoom = async (req, res) => {
                 }
             }
             members.push(req.user.id); // Add the creator to the group
-            const roomId = await createRoomByUserId({
+            const room = await createRoomByUserId({
                 members: members,
                 isGroup: true,
                 groupSettings:{
                     groupName: groupSettings.groupName,
                     groupImage: groupSettings.groupImage,
-                    admin:[req.user.id],
+                    admins:[req.user.id],
                     createdBy: req.user.id,
                 }
             });
-            if(!roomId){
+            if(!room){
                 return res.status(500).json({ error: "Failed to create group room" });
             }
-            return res.status(201).json({ message: "Group room created successfully", roomId });
+            return res.status(201).json({ message: "Group room created successfully", room });
         }else{
             if(members.length!=1){
                 return res.status(400).json({ error: "For one-on-one chat, only one member is allowed" });
@@ -74,14 +74,14 @@ export const createRoom = async (req, res) => {
                 return res.status(400).json({ error: "Invalid user ID in members" });
             }
             members.push(req.user.id); 
-            const roomId= await createRoomByUserId({
+            const room= await createRoomByUserId({
                 members: members,
                 isGroup: false,
             })
-            if(!roomId){
+            if(!room){
                 return res.status(500).json({ error: "Failed to create one-on-one room" });
             }
-            return res.status(201).json({ message: "Room created successfully", roomId });
+            return res.status(201).json({ message: "Room created successfully", room });
 
         }
     } catch (e) {
@@ -89,9 +89,16 @@ export const createRoom = async (req, res) => {
         res.status(500).json({ error: "Internal Server error" });
     }
 };
-
 export const updateRoom = async (req, res) => {
-    return res.status(501).json({ error: "Update room functionality is not implemented yet" });
+    const roomId = req.params.roomId;
+    const updateData = req.body;
+    console.log(updateData)
+    const success= await updateRoomById(roomId, updateData);
+    if (!success) {
+        return res.status(404).json({ error: "Room not found" });
+    }else {
+        return res.status(200).json({ message: "Room updated successfully" });
+    } 
 } 
 export const deleteRoom = async (req, res) => {
     return res.status(501).json({ error: "Delete room functionality is not implemented yet" });

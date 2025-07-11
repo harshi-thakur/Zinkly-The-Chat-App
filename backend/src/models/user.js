@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import { isUserOnline } from "../socket/managers/onlineUsers.js";
 const userSchema = new mongoose.Schema({
     fullname: {
       type: String,
@@ -24,6 +25,10 @@ const userSchema = new mongoose.Schema({
       type: String,
       default: "",
     },
+    lastSeen:{
+      type:Number,
+      default: Date.now(),
+    }
   },
   { timestamps: true });
 
@@ -31,5 +36,11 @@ const userSchema = new mongoose.Schema({
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
+userSchema.virtual('isOnline').get(function () {
+  return isUserOnline(this._id);
+});
+userSchema.set('toJSON', { virtuals: true });
+userSchema.set('toObject', { virtuals: true });
+
 
 export const User = mongoose.models.User || mongoose.model("User", userSchema);

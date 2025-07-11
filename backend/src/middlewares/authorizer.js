@@ -5,6 +5,7 @@ const authorizer = async (req, res, next) => {
         if (!token) {
             return res.status(401).json({ error: "Unauthorized - No token provided "});
         }
+    
        
         const decoded = verifyToken(token);
         if (!decoded) {

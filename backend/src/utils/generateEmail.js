@@ -88,17 +88,17 @@ const getOTPEmailTemplate = (otp) => `
   </html>
 `;
 
-const transporter = nodemailer.createTransport({
-  service: 'Gmail',
+const generateEmail = async (to, subject,otp) => {
+  
+  const transporter = nodemailer.createTransport({
+  service: 'gmail',
   auth: {
     user: process.env.EMAIL_FROM,
     pass: process.env.EMAIL_SERVER_PASSWORD,
   },
 });
-
-const generateEmail = async (to, subject,otp) => {
   const mailOptions = {
-    from: `"Chat App 💬" <${process.env.EMAIL_FROM}>`,
+    from: `Zinkly -The Chat App 💬 <${process.env.EMAIL_FROM}>`,
     to:to,
     subject:subject,
     html: getOTPEmailTemplate(otp),
@@ -106,7 +106,6 @@ const generateEmail = async (to, subject,otp) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:');
   } catch (error) {
     console.error('Error sending email:', error);
   }

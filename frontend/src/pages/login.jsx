@@ -1,17 +1,57 @@
-import { useState } from "react"
-import { Link } from "react-router-dom"
-
+import {  useState } from "react"
+import { Link, replace, useNavigate } from "react-router-dom"
+import Loader from "../components/loader";
+import { apiRequest} from "../lib/utils";
+import useChatStore from "../stores/chatStore";
+import {ErrorAlert} from "../components/errorAlert";
 export default function Login() {
     const appName= import.meta.env.VITE_APP_NAME;
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  })
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const navigate=useNavigate();
+    const [formData, setFormData] = useState({
+      usernameOrEmail: "",
+      password: "",
+    })
+  const setCurrentUser = useChatStore((state) => state.setCurrentUser);
+  const renderInput = (label, name, type = "text") => (
+    <div>
+      <label htmlFor={name} className="block text-sm font-medium text-black mb-2">
+        {label}
+      </label>
+      <input
+        type={type}
+        id={name}
+        name={name}
+        value={formData[name]}
+        onChange={handleChange}
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+        required
+      />
+    </div>
+  );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault()
     // Handle login
-    console.log("Login:", formData)
+    setLoading(true);
+  
+    const {error,data}= await apiRequest({
+      url: "/api/auth/login",
+      method: "POST",
+      body: formData,
+    });
+    setLoading(false);
+    if(error){
+       setError(error);
+       return ;
+    }
+    else {
+      const {user} = data;
+      setCurrentUser(user);
+      navigate("/",{replace:true});
+      window.location.reload();
+    }
   }
 
   const handleChange = (e) => {
@@ -21,7 +61,8 @@ export default function Login() {
     })
   }
 
-  return (
+  return (<>
+  {loading&& <Loader/>}
     <div className="min-h-screen bg-[#D8EDC2] flex items-center justify-center py-16">
       <div className="max-w-md w-full mx-auto">
         <div className="bg-white p-8 rounded-2xl shadow-lg">
@@ -31,34 +72,9 @@ export default function Login() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-black mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-black mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                required
-              />
-            </div>
+            {error && <ErrorAlert message={error} onClear={setError} />}
+            {renderInput("UserName Or Email", "usernameOrEmail", "text")}
+            {renderInput("Password", "password", "password")}
             <button
               type="submit"
               className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
@@ -78,5 +94,6 @@ export default function Login() {
         </div>
       </div>
     </div>
+    </>
   )
 }

@@ -1,64 +1,68 @@
 import Room from "../../models/room.js";
 import { createMessage } from "../../queries/message.js";
 import { updateRoomById } from "../../queries/room.js";
-
+import { debounce } from "../managers/debounceTimers.js";
+import { isUserOnline } from "../managers/onlineUsers.js";
 const MAX_TIME_LIMIT= 5*60*1000;
 
 export const  registerMessageHandlers = (io, socket)=>{
-  socket.on("sendMessage", (data)=> onsendMessage(io,socket,data));
-  socket.on("updateLatestMessage",(data)=>onUpdateLatestMessage(io,socket,data));
+  socket.on("message:send", (data)=> onsendMessage(io,socket,data));
+  // socket.on("updateLastMessage",(data)=>onUpdateLastMessage(io,socket,data));
 };
 
 
 
-export const registerOnlineHandlers = (io, socket,onlineUsers)=> {
+export const registerOnlineHandlers = (io, socket)=> {
   socket.on("get-online-users",({userIds})=>{
-    socket.emit('online-users',{userIds: userIds.filter(id=>onlineUsers.has(id))});
+    socket.emit('online-users',{userIds: userIds.filter(id=> isUserOnline(id))});
   });
 
-  socket.on("typing", ({ roomId }) => {
-    socket.to(roomId).emit("userTyping", { user: socket.user.id });
+  socket.on("typing:start", ({ roomId }) => {
+    socket.to(roomId).emit("user:typing", { userId: socket.user.id,roomId,isTyping:true });
   });
 
-  socket.on("stopTyping", ({ roomId }) => {
-    socket.to(roomId).emit("userStoppedTyping", { user: socket.user.id});
+  socket.on("typing:stop", ({ roomId }) => {
+    socket.to(roomId).emit("user:typing", { userId: socket.user.id,roomId,isTyping:false });
   });
 };
 
 
-const onsendMessage  = (io,socket,data)=>{
-  const {roomId,message}=data;
-  const {type,tempId,content,sentAt}=message;
-  if(!type||!content||!sentAt||!roomId){
+const onsendMessage  = async (io,socket,message)=>{
+  const {type,_id,content,room,sentAt}=message;
+  if(!type||!content||!sentAt||!room){
     return socket.emit("error", {message:"Invalid Message Due To Internal Wokring At Client Side"});
   }
-
-  if(Date.now()-sentAt>MAX_TIME_LIMIT){
-    return socket.emit("isSent",{ roomId , tempId });
-  }
+ 
+  // if(Date.now()-sentAt>MAX_TIME_LIMIT){
+  //   return socket.emit("isSent",{ room , tempId });
+  // }
 
   const newMessage = {
-    room: roomId,
+    room,
     sender: socket.user.id,
     type,
     content,
-    sentAt,
-    processedAt: Date.now()
+    createdAt: Date.now(),
+    sentAt:new Date(sentAt).getTime()
   };
-  
-  const newId  =  createMessage(newMessage);
-  debounceUpdateLatestMessage(roomId,newId);
-  socket.to(roomId).emit("receiveMessage", newMessage);
-  socket.emit("isSent",{ roomId , tempId ,  _id : newId });
+  const newId  = await createMessage(newMessage);
+  newMessage._id = newId;
+  socket.emit("message:delivered",{tempId:_id,message:newMessage});
+  socket.to(room).emit("message:new", {message:newMessage});
+  debounce(room, async () => {
+    await updateRoomById(room, { lastMessage: newId });
+})
+  // socket.emit("isSent",{ roomId , tempId ,  _id : newId });
 }
 
-const debounceUpdateLatestMessage = (roomId,latestMessageId)=>{
-  if(debounceTimers.has(roomId)){
-    clearTimeout(debounceTimers.get(roomId));
-  }
-  const timeout= setTimeout(async()=>{
-    await updateRoomById(roomId,{latestMessage:latestMessageId});
-    debounceTimers.delete(roomId);
-  },5000);
-  debounceTimers.set(roomId,timeout);
-}
+
+// const onUpdateLastMessage = async (io,socket,data)=>{
+//   const {roomId,lastMessage}=data;
+//   if(!roomId||!lastMessage){
+//     return socket.emit("error", {message:"Invalid Room Id or Last Message"});
+//   }
+//   debounceUpdateLastMessage(roomId,lastMessage);
+//   if(!room){
+//     return socket.emit("error", {message:"Room Not Found"});
+//   } 
+// }

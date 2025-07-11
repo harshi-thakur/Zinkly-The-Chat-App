@@ -1,5 +1,6 @@
+import { get } from "mongoose";
 import { createOtp, verifyOtpAndGetUser } from "../queries/otp.js";
-import { verifyPasswordUsingUsernameOrEmail , isEmailExists, isUsernameExists, createUser} from "../queries/user.js";
+import { verifyPasswordUsingUsernameOrEmail , isEmailExists, isUsernameExists, createUser, getUserById} from "../queries/user.js";
 import generateEmail from "../utils/generateEmail.js";
 import  generateOtp  from "../utils/generateOtp.js";
 import  {generateTokenAndSetCookie}  from "../utils/token.js";
@@ -34,14 +35,13 @@ const validateSignUpData = async (data) => {
 
 export const signup = async (req, res) => {
   try {
-    console.log(req.body);
+
     const validation = await validateSignUpData(req.body);
     if (!validation.isValid) {
       return res.status(400).json({ error: validation.error });
     }
     const { fullname, username, email, password } =  req.body;
     const newOtp = generateOtp();
-    console.log("Generated OTP: ", newOtp);
     const otpData = {
       fullname,
       username,
@@ -69,16 +69,17 @@ export const signup = async (req, res) => {
 
 export const login = async (req, res) => {
     try {
-        const { usernameOrEmail, password } = req.body;
-        if (!usernameOrEmail || !password) {
-            return res.status(400).json({ error: "Username/Email and password are required" });
-        } 
-        const userId = await verifyPasswordUsingUsernameOrEmail(usernameOrEmail, password);
-        if (!userId) {  
+      const { usernameOrEmail, password } = req.body;
+      if (!usernameOrEmail || !password) {
+        return res.status(400).json({ error: "Username/Email and password are required" });
+      } 
+
+      const user = await verifyPasswordUsingUsernameOrEmail(usernameOrEmail, password);
+        if (!user) {  
             return res.status(400).json({ error: "Invalid username/email or password" });
         }
-        generateTokenAndSetCookie(userId, res);
-        res.status(200).json({ message: "Login successful"});
+        generateTokenAndSetCookie(user._id, res);
+        res.status(200).json({ user:user,message: "Login successful"});
     }
     catch (e) {
         console.log("Error in login controller " + e.message);
@@ -107,10 +108,8 @@ export const verifyEmail= async (req, res) => {
         }
         const userData= await verifyOtpAndGetUser(email,otp);
         if(userData){
-          console.log(userData);
           const userId= await createUser(userData);
           if(userId){
-            generateTokenAndSetCookie(userId,res);
             res.status(200).json({ message: "OTP verified successfully" });
           }
         }
@@ -118,5 +117,20 @@ export const verifyEmail= async (req, res) => {
         console.log("Error in verifyOtp controller " + e.message);
         res.status(500).json({ error: "Internal Server error" });
     }
+}
+
+export const getCurrentUser = async (req, res) => {
+  try {
+    const id = req.user.id;
+    
+    const user =await getUserById(id);
+
+    res.status(200).json({
+      user:user,
+    });
+  } catch (e) {
+    console.log("Error in getCurrentUser controller " + e.message);
+    res.status(500).json({ error: "Internal Server error" });
+  }
 }
 

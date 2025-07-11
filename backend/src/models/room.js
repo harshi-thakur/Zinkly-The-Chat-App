@@ -10,7 +10,7 @@ const roomSchema = new mongoose.Schema({
         type: Number,
         immutable: true,
     },
-    latestMessage:{
+    lastMessage:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Message',
     },
@@ -18,8 +18,19 @@ const roomSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    groupSettings:{
-        admin:[{
+    isPinned:{
+        type: Boolean,
+        default: false,
+    },
+    isFavourite:{
+        type: Boolean,
+        default: false,
+    },
+    isArchived:{
+        type: Boolean,
+        default: false,
+    }, groupSettings:{
+        admins:[{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
         }],
@@ -31,8 +42,9 @@ const roomSchema = new mongoose.Schema({
             type: String,
             trim: true,
         },
-        groupImage: {
+        groupProfilepic: {
             type: String,
+            default:"",
         }
     }},
     {timestamps: false});

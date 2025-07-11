@@ -1,3 +1,4 @@
+import { getFriends } from "../queries/room.js";
 import { getUserById, getUsersByName, updateUserById } from "../queries/user.js";
 
 export const getUser = async (req, res) => {
@@ -17,16 +18,14 @@ export const getUser = async (req, res) => {
 
 export const searchUser = async (req, res) => {
     try {
-        const searchQuery = req.query.q;
-        const page = req.query.page ? parseInt(req.query.page) : 1;
-        if (!searchQuery) {
+        const SearchQuery = req.query.q;
+        const skip = req.query.skip ? parseInt(req.query.skip) : 0;
+        if (!SearchQuery) {
             return res.status(400).json({ error: "Search query is required" });
         }
-        const users = await getUsersByName(searchQuery,page);
-        if (users.length === 0) {
-            return res.status(404).json({ error: "No users found" });
-        }
-        return res.status(200).json(users);
+        const dontInclude= await getFriends(req.user.id);
+        const searchedUsers = await getUsersByName(SearchQuery,skip,dontInclude);
+        return res.status(200).json(searchedUsers);
     } catch (e) {
         console.log("Error in searchUser controller " + e.message);
         res.status(500).json({ error: "Internal Server error" });

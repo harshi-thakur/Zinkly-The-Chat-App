@@ -1,7 +1,7 @@
 export const handleDbError = (fn) => {
-  return  (...args) => {
+  return async (...args) => {
     try {
-      return  fn(...args);
+      return await fn(...args);
     } catch (err) {
       console.error('DB Error:', err.message);
       throw new Error('Database operation failed');

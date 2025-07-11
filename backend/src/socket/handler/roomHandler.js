@@ -1,19 +1,19 @@
 import { isValidRoomId } from "../../queries/room.js";
 
 export const  registerRoomHandlers=(io, socket)=> {
-  socket.on("joinRoom", async ({roomId}) => {
+  socket.on("room:join", async ({roomId}) => {
     try {
-      console.log(roomId);
       const room = await isValidRoomId(roomId, socket.user.id);
       if (!room) return socket.emit("error", { message: "Room not found" });
       socket.join(roomId);
-      socket.emit("joinedRoom", { roomId });
+      socket.to(roomId).emit("room:member_joined", { roomId:roomId ,userId:socket.user.id});
     } catch (err) {
       socket.emit("error", { message: "Server error" });
     }
   });
-  socket.on("leaveRoom", ({ roomId }) => {
+
+  socket.on("room:leave", ({ roomId }) => {
     socket.leave(roomId);
-    socket.emit("leftRoom", { roomId });
+    socket.to(roomId).emit("room:member_left", { roomId:roomId ,userId:socket.user.id});
   });
 };

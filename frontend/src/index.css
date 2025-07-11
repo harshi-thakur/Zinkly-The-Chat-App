@@ -13,3 +13,34 @@
   -moz-osx-font-smoothing: grayscale;
 }
  */
+
+ .loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f8fff0;
+  flex-direction: column;
+}
+
+.character {
+  animation: bounce 1.4s infinite ease-in-out;
+  text-align: center;
+}
+
+.loading-text {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
+}

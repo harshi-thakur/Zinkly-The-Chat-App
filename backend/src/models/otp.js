@@ -29,12 +29,6 @@ const otpSchema = new mongoose.Schema({
     required: true,
     default: () => new Date(Date.now() + 10 * 60 * 1000)
   },
-  // verified: {
-  //   type: Boolean,
-  //   default: false,
-  //   required: true
-  // }
-
 }, { timestamps: true });
 
 otpSchema.index({ "expiresAt": 1 }, { expireAfterSeconds: 0 });

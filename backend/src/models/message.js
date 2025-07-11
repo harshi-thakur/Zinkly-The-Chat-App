@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema({
-    room:{
+    room: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Room',
         required: true
@@ -11,7 +11,7 @@ const messageSchema = new mongoose.Schema({
         enum: ['text', 'image', 'file'],
         required: true,
     },
-    content:{
+    content: {
         type: String,
         required: true,
         trim: true
@@ -21,20 +21,28 @@ const messageSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
-    sentAt: {
+    createdAt: {
         type: Number,
     },
-    processedAt: {
+    sentAt: {
         type: Number,
         immutable: true
+    },
+    isEdited: {
+        type: Boolean,
+        default: false
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false
     }
-},{
+}, {
     timestamps: false,
 });
 
 messageSchema.pre('save', function (next) {
-    if (!this.processedAt) {
-        this.processedAt = Date.now();
+    if (!this.sentAt) {
+        this.sentAt = Date.now();
     }
     next();
 });
