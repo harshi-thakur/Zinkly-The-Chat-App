@@ -141,12 +141,7 @@ export function MobileHeader({ onMenuClick }) {
           </Button>
         )}
 
-        {currentView === "chat-list" && (
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Search className="w-4 h-4" />
-          </Button>
-        )}
-
+    
         {showChatActions && (
           <Button variant="ghost" size="icon" className="rounded-full">
             <MoreHorizontal className="w-4 h-4" />

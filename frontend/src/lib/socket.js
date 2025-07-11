@@ -83,9 +83,12 @@ export class SocketService {
     })
 
     // Room events
-    this.socket.on("room:created", (data) => {
-      console.log("🏠 Room created:", data)
-      this.emit("room:created", data)
+    this.socket.on("room:created", ({room}) => {
+      console.log("🏠 Room created:", room)
+      useChatStore.getState().setRooms([room]);
+      room.members.forEach((member) => {
+        useChatStore.getState().setUserOnline(member._id, member.isOnline);
+      });
     })
 
     this.socket.on("room:updated", (data) => {
@@ -192,11 +195,9 @@ export class SocketService {
     this.socket.emit("room:leave", { roomId })
   }
 
-  createRoom(data) {
+  createRoom(room) {
     if (!this.socket?.connected) return
-
-    console.log("🏗️ Creating room:", data)
-    this.socket.emit("room:create", data)
+    this.socket.emit("room:create", {room})
   }
 
   updateRoom(roomId, updates) {

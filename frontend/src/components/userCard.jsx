@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Plus } from "lucide-react";
 import { apiRequest } from "../lib/utils";
+import useSocketStore from "../stores/socketStore";
 export function UserCard({ user ,handleSearchModeToggle}) {
   const navigate = useNavigate();
   const handleUserSelect = (userId) => {
@@ -27,6 +28,7 @@ export function UserCard({ user ,handleSearchModeToggle}) {
             data.room.members.forEach((member) => {
               useChatStore.getState().setUserOnline(member._id,member.isOnline);
             });
+            useSocketStore.getState().createRoom(data.room);
           })
   };
   return (

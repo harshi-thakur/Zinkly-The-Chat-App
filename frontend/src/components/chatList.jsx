@@ -14,7 +14,7 @@ import { useChatSelectors } from "../hooks/useChatSelectors";
 import useChatStore from "../stores/chatStore";
 import { Button } from "./ui/button";
 import { Room } from "./room";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { apiRequest } from "../lib/utils";
 import { UserCard } from "./userCard";
 
@@ -26,21 +26,29 @@ export function ChatList() {
   const setSearchedUsers = useChatStore((state) => state.setSearchedUsers);
   const { currentUser, searchQuery, pinnedRooms, filteredRooms } =
     useChatSelectors();
-  const handleSearchChange = async (e) => {
-    setSearchQuery(e.target.value);
-    if (searchMode == "conversations") return;
+  const debounceRef = useRef(null);
+  const handleSearchChange = (e) => {
+  const value = e.target.value;
+  setSearchQuery(value);
+
+  if (searchMode === "conversations") return;
+
+  if (debounceRef.current) clearTimeout(debounceRef.current);
+
+  debounceRef.current = setTimeout(async () => {
     const { data, error } = await apiRequest({
       url: "/api/users/search",
       method: "GET",
-      params: { q: e.target.value, skip: searchedUsers.skip || 0 },
+      params: { q: value, skip: searchedUsers.skip || 0 },
     });
+
     if (error) {
       console.error("Error fetching user:", error);
-      return;
     } else {
       setSearchedUsers(data);
     }
-  };
+  }, 1000);
+}
   const handleSearchModeToggle = useCallback(() => {
     const newMode =
       searchMode === "conversations" ? "new-rooms" : "conversations";
