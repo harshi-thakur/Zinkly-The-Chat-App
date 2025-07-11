@@ -1,10 +1,11 @@
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
-import { Archive, Users, Mail, Star, X } from "lucide-react";
+import { Archive, Users, Mail, Star, X, LogOutIcon } from "lucide-react";
 import { useChatSelectors } from "../hooks/useChatSelectors";
 import useSocketStore from "../stores/socketStore";
 import useChatStore from "../stores/chatStore";
+import { apiRequest } from "../lib/utils";
 export const NavigationLinks = ({setShowMobileNav}) => {
   const isConnected= useSocketStore((state)=>state.isConnected);
   const setMessageView = useChatStore((state) => state.setmessageView);
@@ -15,6 +16,7 @@ export const NavigationLinks = ({setShowMobileNav}) => {
    if(setShowMobileNav) setShowMobileNav(false)
     setMessageView(view);
   }
+  
   return (
     <>
       <div className="p-6">
@@ -92,7 +94,15 @@ export const NavigationLinks = ({setShowMobileNav}) => {
 
 export const CurrentUserProfile = () => {
   const { currentUser } = useChatSelectors();
+  const handleLogout=async ()=>{
+    await apiRequest({
+      url: '/api/auth/logout',
+      method: 'POST',
+    });
+   window.location.replace("/")
+  }
   return (
+    <div className="flex items-center justify-between pr-3 ">
     <div className="flex items-center gap-3 p-4 border-t border-white/10 ">
       <div className="relative">
       <Avatar className="w-10 h-10">
@@ -110,6 +120,14 @@ export const CurrentUserProfile = () => {
         <p className="text-sm font-medium text-white">{currentUser.fullname}</p>
         <p className="text-xs text-white/60 truncate">{currentUser.email}</p>
       </div>
+    </div>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="text-white hover:bg-white/10 rounded-full"
+      onClick={handleLogout}>
+        <LogOutIcon className="w-5 h-5" />
+      </Button>
     </div>
   );
 };

@@ -38,7 +38,6 @@ export default function SignUp() {
             <p className="text-gray-600">Create your {appName} account</p>
           </div>
           <form onSubmit={async (e) => await handleSubmit(e,formData, navigate,setError,setLoading)} className="space-y-6">
-            {formError && <ErrorAlert message={formError} onClear={setFormError} />}
             {error && <ErrorAlert message={error} />}
             {renderInput("Full Name", "fullname")}
             {renderInput("User Name", "username")}
