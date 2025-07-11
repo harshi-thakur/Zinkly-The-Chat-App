@@ -84,7 +84,6 @@ export class SocketService {
 
     // Room events
     this.socket.on("room:created", ({room}) => {
-      console.log("🏠 Room created:", room)
       useChatStore.getState().setRooms([room]);
       room.members.forEach((member) => {
         useChatStore.getState().setUserOnline(member._id, member.isOnline);
