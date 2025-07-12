@@ -39,7 +39,7 @@ export default function Login() {
     const {error,data}= await apiRequest({
       url: "/api/auth/login",
       method: "POST",
-      body: formData,
+      body: {...formData, usernameOrEmail: formData.usernameOrEmail.trim()},
     });
     setLoading(false);
     if(error){

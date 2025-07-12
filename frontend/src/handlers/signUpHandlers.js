@@ -17,7 +17,7 @@ export const handleSubmit = async(e,formData, navigate,setError,setLoading) => {
  const {data,error} = await apiRequest({
     url: "/api/auth/signup",
     method: "POST",
-    body: formData,
+    body: {...formData, username: formData.username.trim(),fullname: formData.fullname.trim(),email: formData.email.trim()},
   });
   setLoading(false);
   if(error){
