@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import useOtpTimer from "../hooks/useOtpTimer";
 import { OtpInput } from "../components/test";
 import Loader from "../components/loader";
 import { ErrorAlert } from "../components/errorAlert";
-
+import { apiRequest } from "../lib/utils";
 export default function OTPVerification() {
   const appName = import.meta.env.VITE_APP_NAME;
   const navigate = useNavigate();
