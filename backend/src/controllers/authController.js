@@ -94,6 +94,7 @@ export const logout = async (req, res) => {
       sameSite: "none",
       secure: process.env.NODE_ENV !== "development",
     });
+    res.status(200).json({ message: "Logout successful" });
   } catch (e) {
     console.log("Error in logout controller " + e.message);
     res.status(500).json({ error: "Internal Server error" });
