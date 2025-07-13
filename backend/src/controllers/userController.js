@@ -1,5 +1,7 @@
+import { get } from "mongoose";
 import { getFriends } from "../queries/room.js";
 import { getUserById, getUsersByName, updateUserById } from "../queries/user.js";
+import { getReceivedRequests, getSentRequests } from "../queries/request.js";
 
 export const getUser = async (req, res) => {
     try {
@@ -49,6 +51,25 @@ export const updateUser = async (req, res) => {
         return res.status(200).json({ message: "User updated successfully", user: updatedUser });
     } catch (e) {
         console.log("Error in updateUser controller " + e.message);
+        res.status(500).json({ error: "Internal Server error" });
+    }
+}
+
+export const getUserRequests = async (req, res) => {
+    try{
+        const userId =req.user.id;
+        const receivedReq = getReceivedRequests(userId);
+        const sentReq = getSentRequests(userId);
+        Promise.all([receivedReq,sentReq]).then((results)=>{
+            return res.status(200).json({
+                requests:{
+                    receivedRequest: results[0],
+                    sentRequest: results[1]
+                    }
+             });
+        });
+    }catch(e){
+        console.log("Error in getUserRequests controller " + e.message);
         res.status(500).json({ error: "Internal Server error" });
     }
 }

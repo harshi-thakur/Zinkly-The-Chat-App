@@ -40,7 +40,9 @@ export function Room({ room }) {
             {getRoomDisplayName(room)
               .split(" ")
               .map((n) => n[0])
-              .join("")}
+              .join("")
+              }
+            
           </AvatarFallback>
         </Avatar>
         {room.isGroup === false &&

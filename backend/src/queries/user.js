@@ -41,7 +41,6 @@ export const getUsersByName = handleDbError(async (name, skip = 0, dontInclude) 
   }).select('-password -email')
     .skip(skip)
     .limit(10)
-    .populate('username fullname profilePic')
     .exec();
   return {
     users,

@@ -92,7 +92,6 @@ export const createRoom = async (req, res) => {
 export const updateRoom = async (req, res) => {
     const roomId = req.params.roomId;
     const updateData = req.body;
-    console.log(updateData)
     const success= await updateRoomById(roomId, updateData);
     if (!success) {
         return res.status(404).json({ error: "Room not found" });
@@ -103,11 +102,5 @@ export const updateRoom = async (req, res) => {
 export const deleteRoom = async (req, res) => {
     return res.status(501).json({ error: "Delete room functionality is not implemented yet" });
 }
-export const res = async ()=>{
-    const a=2,b=2;
-    if(a) sum+=a;
-    const sum= a+b;
-    return sum
 
-}
 

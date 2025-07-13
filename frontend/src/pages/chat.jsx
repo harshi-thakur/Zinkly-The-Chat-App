@@ -4,11 +4,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import {
   Settings,
-  Star,
+  ArchiveIcon,
+  ArchiveRestore,
   MessageCircle,
-  Phone,
-  Video,
-  MoreHorizontal,
+  Pin,
+  PinOff,
+  StarIcon,
+  StarOff,
   Loader2,
 } from "lucide-react";
 import useChatStore from "../stores/chatStore";
@@ -18,13 +20,13 @@ import { useChatSelectors } from "../hooks/useChatSelectors";
 import { MobileHeader } from "../components/mobileHeader";
 import {
   NavigationLinks,
-  CurrentUserProfile, 
+  CurrentUserProfile,
 } from "../components/navigationPanel";
 import { ChatList } from "../components/chatList";
 import { MobileUserList } from "../components/mobileUserList";
 import { use } from "react";
+import { apiRequest } from "../lib/utils";
 // import { useSocketEvents } from "../hooks/useSocket";
-
 
 export default function ChatApp() {
   const [showMobileNav, setShowMobileNav] = useState(false);
@@ -38,12 +40,18 @@ export default function ChatApp() {
   const { currentView, setCurrentView } = useMobileStore();
 
   // Selectors
-  const {
-    currentUser,
-    activeRoom,
-    onlineMembers,
-    getRoomDisplayName,
-  } = useChatSelectors();
+  const { currentUser, activeRoom, onlineMembers, getRoomDisplayName } = useChatSelectors();
+  const handleClick = (feature) => {
+      useChatStore.getState().toggleFeatureRoom(activeRoom._id, feature);
+      apiRequest({
+        url: `/api/rooms/${activeRoom._id}`,
+        body: {
+          [feature]: !activeRoom[feature],
+        },
+        method: "PATCH",
+      });
+    };
+  
   // Custom hooks
 
   // Handle URL params
@@ -83,7 +91,7 @@ export default function ChatApp() {
       </div>
     );
   }
-  
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-orange-50">
       {/* Mobile Layout */}
@@ -176,17 +184,41 @@ export default function ChatApp() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Star className="w-5 h-5" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={() => handleClick("isArchived")}
+                  >
+                    {activeRoom.isArchived ? (
+                      <ArchiveRestore className="w-4 h-4" />
+                    ) : (
+                      <ArchiveIcon className="w-4 h-4" />
+                    )}
                   </Button>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Phone className="w-5 h-5" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={() => handleClick("isFavourite")}
+                  >
+                    {activeRoom.isFavourite ? (
+                      <StarOff className="w-4 h-4" />
+                    ) : (
+                      <StarIcon className="w-4 h-4" />
+                    )}
                   </Button>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Video className="w-5 h-5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <MoreHorizontal className="w-5 h-5" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={() => handleClick("isPinned")}
+                  >
+                    {activeRoom.isPinned ? (
+                      <PinOff className="w-4 h-4" />
+                    ) : (
+                      <Pin className="w-4 h-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -209,7 +241,7 @@ export default function ChatApp() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="w-80 bg-white/90 backdrop-blur-sm border-l border-gray-200/50">
+        <div className="w-96 bg-white/90 backdrop-blur-sm border-l border-gray-200/50">
           {/* Messages Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200/50">
             <h2 className="text-lg font-semibold text-gray-900">Messages</h2>

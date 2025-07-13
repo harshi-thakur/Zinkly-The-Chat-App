@@ -1,6 +1,7 @@
 import { io } from "socket.io-client"
 import { DEFAULT_SOCKET_CONFIG } from "./type"
 import useChatStore from "../stores/chatStore"
+import { use } from "react"
 export class SocketService {
     constructor(config = DEFAULT_SOCKET_CONFIG) {
         this.socket = null
@@ -25,7 +26,6 @@ export class SocketService {
             
             this.socket.connect()
             this.socket.on("connect", () => {
-                console.log("✅ Socket connected:", this.socket)
                 this.reconnectAttempts = 0
                 this.setupEventListeners()
                 this.emit("connection:established", { userId: user.id, socketId: this.socket?.id || "" })
@@ -58,7 +58,6 @@ export class SocketService {
     }
     setupEventListeners() {
     if (!this.socket) return
-      console.log("Setting up socket event listeners...")
     // Message events
     this.socket.on("message:new", ({message}) => {
       useChatStore.getState().addMessage(message);
@@ -78,44 +77,55 @@ export class SocketService {
     this.socket.on("message:delivered", ({tempId,message}) => {
       if(!tempId || !message){
         console.error("Invalid message update data:", message)
+      }else{
+        useChatStore.getState().updateMessageId(tempId, message);
       }
-      useChatStore.getState().updateMessageId(tempId, message);
     })
 
     // Room events
-    this.socket.on("room:created", ({room}) => {
+    
+    this.socket.on("room:updated", (data) => {
+      this.emit("room:updated", data)
+    })
+    
+    this.socket.on("room:member_joined", ({roomId,userId}) => {
+      useChatStore.getState().setUserOnline(userId, true);
+    })
+    
+    this.socket.on("room:member_left", ({roomId,userId}) => {
+      useChatStore.getState().setUserOnline(userId, false);
+    })
+    //Request events
+    this.socket.on("request:accepted", ({room,requestId}) => {
+      useChatStore.getState().removeSentRequest(requestId);
       useChatStore.getState().setRooms([room]);
       room.members.forEach((member) => {
         useChatStore.getState().setUserOnline(member._id, member.isOnline);
       });
     })
-
-    this.socket.on("room:updated", (data) => {
-      console.log("🏠 Room updated:", data)
-      this.emit("room:updated", data)
+    
+    this.socket.on("request:received", ({request}) => {
+      useChatStore.getState().setReceivedRequest([request]);
     })
 
-    this.socket.on("room:member_joined", ({roomId,userId}) => {
-      useChatStore.getState().setUserOnline(userId, true);
+    this.socket.on("request:sent",({request})=>{
+      useChatStore.getState().setSentRequest([request]);
     })
 
-    this.socket.on("room:member_left", ({roomId,userId}) => {
-      useChatStore.getState().setUserOnline(userId, false);
+    this.socket.on("request:unsent", ({requestId}) => {
+      useChatStore.getState().removeReceivedRequest(requestId);
     })
 
     // Presence events
     this.socket.on("user:online", (data) => {
-      console.log("🟢 User online:", data)
       this.emit("user:online", data)
     })
 
     this.socket.on("user:offline", (data) => {
-      console.log("🔴 User offline:", data)
       this.emit("user:offline", data)
     })
 
     this.socket.on("user:typing", ({roomId,userId,isTyping}) => {
-      console.log(`📝 User ${isTyping ? "started" : "stopped"} typing in room ${roomId}:`, userId)
       if(isTyping){
       useChatStore.getState().setTyping({userId, roomId, timestamp: new Date(),});
       }else{
@@ -147,8 +157,6 @@ export class SocketService {
     if (!this.socket?.connected) {
       throw new Error("Socket not connected")
     }
-
-    console.log("📤 Sending message:", data)
     this.socket.emit("message:send", data)
   }
 
@@ -182,22 +190,37 @@ export class SocketService {
 
   joinRoom(roomId) {
     if (!this.socket?.connected) return
-
-    console.log("🚪 Joining room:", roomId)
     this.socket.emit("room:join", { roomId })
   }
 
   leaveRoom(roomId) {
     if (!this.socket?.connected) return
-
-    console.log("🚪 Leaving room:", roomId)
     this.socket.emit("room:leave", { roomId })
   }
 
-  createRoom(room) {
+  requestAccept(requestId) {
     if (!this.socket?.connected) return
-    this.socket.emit("room:create", {room})
+    useChatStore.getState().removeReceivedRequest(requestId);
+    this.socket.emit("request:accept", {requestId})
   }
+
+  requestSend(userId){
+     if (!this.socket?.connected) return
+    this.socket.emit("request:send", {userId})
+  }
+
+  requestReject(requestId){
+    if (!this.socket?.connected) return
+    useChatStore.getState().removeReceivedRequest(requestId);
+    this.socket.emit("request:reject", {requestId})
+  }
+
+  requestUnsend(requestId){
+    if (!this.socket?.connected) return
+    useChatStore.getState().removeSentRequest(requestId);
+    this.socket.emit("request:unsend", {requestId})
+  }
+
 
   updateRoom(roomId, updates) {
     if (!this.socket?.connected) return

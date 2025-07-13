@@ -51,18 +51,6 @@ const onsendMessage  = async (io,socket,message)=>{
   socket.to(room).emit("message:new", {message:newMessage});
   debounce(room, async () => {
     await updateRoomById(room, { lastMessage: newId });
-})
-  // socket.emit("isSent",{ roomId , tempId ,  _id : newId });
-}
+})}
 
 
-// const onUpdateLastMessage = async (io,socket,data)=>{
-//   const {roomId,lastMessage}=data;
-//   if(!roomId||!lastMessage){
-//     return socket.emit("error", {message:"Invalid Room Id or Last Message"});
-//   }
-//   debounceUpdateLastMessage(roomId,lastMessage);
-//   if(!room){
-//     return socket.emit("error", {message:"Room Not Found"});
-//   } 
-// }

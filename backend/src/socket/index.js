@@ -4,6 +4,7 @@ import { registerMessageHandlers, registerOnlineHandlers } from './handler/messa
 import { registerRoomHandlers } from './handler/roomHandler.js';
 import { addOnlineUser, removeOnlineUser } from './managers/onlineUsers.js';
 import { getRoomIdsByUserId } from '../queries/room.js';
+import { registerRequestHandlers } from './handler/userHandler.js';
 
 function setupSocket(server) {
   const io = new Server(server, {
@@ -23,6 +24,7 @@ function setupSocket(server) {
     registerMessageHandlers(io, socket);
     registerOnlineHandlers(io, socket);
     registerRoomHandlers(io, socket);
+    registerRequestHandlers(io, socket);
 
     socket.on("disconnect", () => {
       if (socket.user.id) {

@@ -16,7 +16,6 @@ const useAuthStatus = () => {
         setIsAuthenticated(false);
       } else {
         const {user} = data;
-        console.log("User data:", user);
         setCurrentUser(user);
         setIsAuthenticated(true);
       }

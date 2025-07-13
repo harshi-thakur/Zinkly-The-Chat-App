@@ -18,11 +18,15 @@ const useChatStore = create(
       rooms: {},
       messages: {},
       activeRoomId: null,
-      activeRoom:{},
+      activeRoom: {},
       lastViewedAt: {},
       lastReadMessages: {},
       pendingMessages: new Map(),
       onlineUsers: new Set(),
+      requests: {
+        sent: {},
+        received: {},
+      },
       typingUsers: {},
       messageHistory: {},
       searchQuery: "",
@@ -142,6 +146,53 @@ const useChatStore = create(
           state.messageView = view
         }
         ),
+      setSentRequest: (requests) =>
+        set((state) => {
+          if (!requests) return;
+          const newSent = { ...state.requests.sent };
+
+          requests.forEach((request) => {
+            newSent[request._id] = {
+              ...request.receiver,
+              requestId: request._id,
+              sentAt: new Date(request.sentAt),
+            };
+          });
+
+          state.requests.sent = newSent;
+        }),
+
+      removeSentRequest: (requestId) =>
+        set((state) => {
+          const updated = { ...state.requests.sent };
+          delete updated[requestId];
+          state.requests.sent = updated;
+        }),
+
+      removeReceivedRequest: (requestId) =>
+        set((state) => {
+          const updated = { ...state.requests.received };
+          delete updated[requestId];
+          state.requests.received = updated;
+        }),
+
+      setReceivedRequest: (requests) =>
+        set((state) => {
+          if (!requests) return;
+
+          const newReceived = { ...state.requests.received };
+
+          requests.forEach((request) => {
+            newReceived[request._id] = {
+              ...request.sender,
+              requestId: request._id,
+              sentAt: new Date(request.sentAt),
+            };
+          });
+
+          state.requests.received = newReceived;
+        }),
+
       addMessage: (message) =>
         set((state) => {
           const roomMessages = state.messages[message.room] || []
@@ -303,37 +354,45 @@ const useChatStore = create(
 
       toggleFeatureRoom: (roomId, feature) =>
         set((state) => {
-          const room = state.rooms[roomId]
-          if (room) {
-            if (feature === "isArchive") {
-              room.isArchive = !room.isArchive
-            } else if (feature === "isPinned") {
-              room.isPinned = !room.isPinned
-            } else if (feature === "isFavourite") {
-              room.isFavourite = !room.isFavourite
-            }
-          }
+         
+          const room = state.rooms?.[roomId];
+          if (!room) return;
+
+          const toggledFields = {
+            isArchived: 'isArchived',
+            isPinned: 'isPinned',
+            isFavourite: 'isFavourite',
+          };
+
+          const field = toggledFields[feature];
+          if (!field) return;
+
+          // ✅ Create a new room object to trigger filtering/selectors
+          state.rooms[roomId] = {
+            ...room,
+            [field]: !room[field],
+          };
         }),
       setSearchMode: (mode) =>
-        set((state) => {
-          state.searchMode = mode
-        }),
+      set((state) => {
+        state.searchMode = mode
+      }),
       setSearchedUsers: ({ users, hasMore }) =>
-        set((state) => {
-          state.searchedUsers = {
-            users: users,
-            hasMore: hasMore,
-            skip: 0,
-          }
-        }),
+      set((state) => {
+        state.searchedUsers = {
+          users: users,
+          hasMore: hasMore,
+          skip: 0,
+        }
+      }),
       appendSearchedUsers: (users, hasMore) =>
-        set((state) => {
-          state.searchedUsers = {
-            users: [...state.searchedUsers.users, ...users],
-            hasMore: hasMore,
-            skip: state.searchedUsers.skip + users.length
-          }
-        }),
+      set((state) => {
+        state.searchedUsers = {
+          users: [...state.searchedUsers.users, ...users],
+          hasMore: hasMore,
+          skip: state.searchedUsers.skip + users.length
+        }
+      }),
       // Helper methods
       sendMessage: (message) => {
         const { currentUser, addMessage, removeTyping, updateLastActivity } = get()

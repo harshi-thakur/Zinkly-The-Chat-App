@@ -71,4 +71,16 @@ const initializeData = () => {
       })
     })
   });
+  apiRequest({
+    url:"/api/users/requests",
+    method:"GET",
+  }).then(({data,error})=>{
+    if(error){
+      console.error("Error fetching requests:",error);
+      return;
+    }
+    const {requests}=data
+    useChatStore.getState().setReceivedRequest(requests.receivedRequest);
+    useChatStore.getState().setSentRequest(requests.sentRequest);
+  })
 };

@@ -1,7 +1,7 @@
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
-import { Archive, Users, Mail, Star, X, LogOutIcon } from "lucide-react";
+import { Archive, Users, Mail, Star, X, LogOutIcon, Plus } from "lucide-react";
 import { useChatSelectors } from "../hooks/useChatSelectors";
 import useSocketStore from "../stores/socketStore";
 import useChatStore from "../stores/chatStore";
@@ -11,7 +11,6 @@ export const NavigationLinks = ({setShowMobileNav}) => {
   const setMessageView = useChatStore((state) => state.setmessageView);
   const messageView=useChatStore((state) => state.messageView);
   const { totalUnreadCount } = useChatSelectors();
-  
   const handleClick = (view) => {
    if(setShowMobileNav) setShowMobileNav(false)
     setMessageView(view);
@@ -84,6 +83,14 @@ export const NavigationLinks = ({setShowMobileNav}) => {
           >
             <Archive className="w-5 h-5 mr-3" />
             Archive
+          </Button>
+          <Button
+            variant="ghost"
+            className={`w-full justify-start ${messageView=='requests'? 'text-white  bg-white/10 ':'text-white/70'} hover:bg-white/10`}
+            onClick={()=>handleClick("requests")}
+          >
+            <Plus className="w-5 h-5 mr-3" />
+            Requests
           </Button>
           
         </div>

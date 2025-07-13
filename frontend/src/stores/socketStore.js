@@ -96,7 +96,26 @@ const useSocketStore = create((set, get) => ({
       SocketServiceInstance.updateRoom(roomId, updates);
     } catch (err) {}
   },
-
+  requestAccept:(requestId) => {
+    try {
+      SocketServiceInstance.requestAccept(requestId);
+    } catch (err) {}
+  },
+  requestSend: (userId) => {
+    try {
+      SocketServiceInstance.requestSend(userId);
+    } catch (err) {}
+  },
+  requestReject: (requestId) => {
+    try {
+      SocketServiceInstance.requestReject(requestId);
+    } catch (err) {}
+  },
+  requestUnsend: (requestId) => {
+    try {
+      SocketServiceInstance.requestUnsend(requestId);
+    } catch (err) {}
+  },
   startTyping: (roomId) => {
     try {
       SocketServiceInstance.startTyping(roomId);

@@ -2,24 +2,27 @@ import { Button } from "../components/ui/button";
 import {
   Menu,
   ArrowLeft,
-  Search,
   MoreHorizontal,
   Users,
-  ArchiveIcon, ArchiveRestore, Pin, PinOff, StarIcon, StarOff
+  ArchiveIcon,
+  ArchiveRestore,
+  Pin,
+  PinOff,
+  StarIcon,
+  StarOff,
 } from "lucide-react";
 import useMobileStore from "../stores/mobileStore";
 import { useChatSelectors } from "../hooks/useChatSelectors";
-import  useChatStore  from "../stores/chatStore";
+import useChatStore from "../stores/chatStore";
 import { apiRequest } from "../lib/utils";
 export function MobileHeader({ onMenuClick }) {
   const { currentView, setCurrentView } = useMobileStore();
-  const setMessageView = useChatStore((state) => state.setmessageView);
   const { activeRoom, onlineMembers, getRoomDisplayName, totalUnreadCount } =
     useChatSelectors();
 
   const handleBackClick = () => {
     if (currentView === "chat") {
-      useChatStore.getState().setActiveRoom('');
+      useChatStore.getState().setActiveRoom("");
       setCurrentView("chat-list");
     } else if (currentView === "user-list") {
       setCurrentView("chat");
@@ -48,24 +51,16 @@ export function MobileHeader({ onMenuClick }) {
   const showBackButton = currentView === "chat" || currentView === "user-list";
   const showChatActions = currentView === "chat" && activeRoom;
   const showUsersButton = currentView === "chat" && activeRoom;
-  const handleClick=(feature)=>{
-    useChatStore.getState().toggleFeatureRoom(feature);
-    if(feature=='isArchive'){
-      setMessageView('archive');
-    }
-    else if(feature=='isFavourite'){
-      setMessageView('favourite');
-    }
-
+  const handleClick = (feature) => {
+    useChatStore.getState().toggleFeatureRoom(activeRoom._id, feature);
     apiRequest({
       url: `/api/rooms/${activeRoom._id}`,
-      body:{
+      body: {
         [feature]: !activeRoom[feature],
       },
       method: "PATCH",
-    })
-
-  }
+    });
+  };
 
   return (
     <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200 md:hidden">
@@ -118,14 +113,41 @@ export function MobileHeader({ onMenuClick }) {
       <div className="flex items-center gap-2">
         {showChatActions && (
           <>
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={()=>handleClick('isArchive')}>
-              {activeRoom.isArchive?<ArchiveRestore className="w-4 h-4"/>:<ArchiveIcon className="w-4 h-4" />}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => handleClick("isArchived")}
+            >
+              {activeRoom.isArchived ? (
+                <ArchiveRestore className="w-4 h-4" />
+              ) : (
+                <ArchiveIcon className="w-4 h-4" />
+              )}
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-full"  onClick={()=>handleClick('isFavourite')}>
-              {activeRoom.isFavourite?<StarOff className="w-4 h-4"/>:<StarIcon className="w-4 h-4" />}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => handleClick("isFavourite")}
+            >
+              {activeRoom.isFavourite ? (
+                <StarOff className="w-4 h-4" />
+              ) : (
+                <StarIcon className="w-4 h-4" />
+              )}
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-full"  onClick={()=>handleClick('isPinned')}>
-             {activeRoom.isPinned?<PinOff className="w-4 h-4"/>:<Pin className="w-4 h-4" />}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => handleClick("isPinned")}
+            >
+              {activeRoom.isPinned ? (
+                <PinOff className="w-4 h-4" />
+              ) : (
+                <Pin className="w-4 h-4" />
+              )}
             </Button>
           </>
         )}
@@ -141,7 +163,6 @@ export function MobileHeader({ onMenuClick }) {
           </Button>
         )}
 
-    
         {showChatActions && (
           <Button variant="ghost" size="icon" className="rounded-full">
             <MoreHorizontal className="w-4 h-4" />

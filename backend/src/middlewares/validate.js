@@ -9,7 +9,6 @@ export const validateRoomId = async  (req, res, next) => {
         return res.status(403).json({ error: "Forbidden - Invalid Room ID" });
     }
     req.user.roomId = validRoomId; 
-//    console.log( "Valid Room ID:", validRoomId); 
     next();
 }
 

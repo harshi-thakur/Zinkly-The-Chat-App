@@ -4,11 +4,9 @@ import {
   Pin,
   Search,
   MessageCircle,
-  Plus,
   Users,
-  Loader2,
-  UserPlus,
   SearchIcon,
+  PlusIcon,
 } from "lucide-react";
 import { useChatSelectors } from "../hooks/useChatSelectors";
 import useChatStore from "../stores/chatStore";
@@ -18,37 +16,45 @@ import { useCallback, useRef } from "react";
 import { apiRequest } from "../lib/utils";
 import { UserCard } from "./userCard";
 
+
 export function ChatList() {
+  const title={
+    all: "All Chats",
+    favourites: "Favourite Chats",
+    archive: "Archived Chats",
+    groups: "Group Chats",
+  }
   const setSearchQuery = useChatStore((state) => state.setSearchQuery);
   const setSearchMode = useChatStore((state) => state.setSearchMode);
   const searchMode = useChatStore((state) => state.searchMode);
   const searchedUsers = useChatStore((state) => state.searchedUsers);
   const setSearchedUsers = useChatStore((state) => state.setSearchedUsers);
-  const { currentUser, searchQuery, pinnedRooms, filteredRooms } =
+  const messageView = useChatStore((state) => state.messageView);
+  const { currentUser, searchQuery, pinnedRooms, filteredRooms,receivedRequest,sentRequest } =
     useChatSelectors();
   const debounceRef = useRef(null);
   const handleSearchChange = (e) => {
-  const value = e.target.value;
-  setSearchQuery(value);
+    const value = e.target.value;
+    setSearchQuery(value);
 
-  if (searchMode === "conversations") return;
+    if (searchMode === "conversations") return;
 
-  if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
 
-  debounceRef.current = setTimeout(async () => {
-    const { data, error } = await apiRequest({
-      url: "/api/users/search",
-      method: "GET",
-      params: { q: value, skip: searchedUsers.skip || 0 },
-    });
+    debounceRef.current = setTimeout(async () => {
+      const { data, error } = await apiRequest({
+        url: "/api/users/search",
+        method: "GET",
+        params: { q: value, skip: searchedUsers.skip || 0 },
+      });
 
-    if (error) {
-      console.error("Error fetching user:", error);
-    } else {
-      setSearchedUsers(data);
-    }
-  }, 1000);
-}
+      if (error) {
+        console.error("Error fetching user:", error);
+      } else {
+        setSearchedUsers(data);
+      }
+    }, 1000);
+  };
   const handleSearchModeToggle = useCallback(() => {
     const newMode =
       searchMode === "conversations" ? "new-rooms" : "conversations";
@@ -57,7 +63,6 @@ export function ChatList() {
   }, [searchMode, setSearchMode, searchQuery]);
 
   if (!currentUser) return null;
-
   return (
     <>
       {/* Search */}
@@ -115,7 +120,14 @@ export function ChatList() {
             <div className="space-y-2">
               {searchedUsers.users &&
                 searchedUsers.users.map((user) => (
-                  <UserCard key={user._id} user={user} handleSearchModeToggle={handleSearchModeToggle} />
+                  <UserCard
+                    key={user._id}
+                    user={user}
+                    sentRequest={false}
+                    receivedRequest={false}
+                    addRequest={true}
+                    handleSearchModeToggle={handleSearchModeToggle}
+                  />
                 ))}
             </div>
           </ScrollArea>
@@ -123,7 +135,7 @@ export function ChatList() {
       )}
 
       {/* Chat List */}
-      {searchMode == "conversations" && (
+      {searchMode == "conversations" && messageView != "requests" && (
         <ScrollArea className="flex-1">
           {/* Pinned Chats */}
           {pinnedRooms.length > 0 && (
@@ -143,7 +155,7 @@ export function ChatList() {
           <div className="p-3">
             <div className="flex items-center gap-2 mb-3">
               <MessageCircle className="w-4 h-4 text-gray-600" />
-              <h3 className="font-semibold text-gray-900">All Chats</h3>
+              <h3 className="font-semibold text-gray-900">{title[messageView]}</h3>
             </div>
             <div className="space-y-2">
               {filteredRooms
@@ -154,6 +166,51 @@ export function ChatList() {
             </div>
           </div>
         </ScrollArea>
+      )}
+
+      {searchMode == "conversations" && messageView == "requests" && (
+        <>
+        <div className="p-4 mb-2 border-b border-gray-100">
+          <div className="flex items-center gap-2 mb-3">
+            <PlusIcon className="w-4 h-4 text-gray-600" />
+            <h3 className="font-semibold text-gray-900">Request Received</h3>
+          </div>
+          <ScrollArea className="flex-1 h-52">
+            <div className="space-y-2">
+              {receivedRequest &&
+                receivedRequest.map((user) => (
+                  <UserCard
+                    key={user.requestId}
+                    user={user}
+                    sentRequest={false}
+                    receivedRequest={true}
+                    addRequest={false}
+                  />
+                ))}
+            </div>
+          </ScrollArea>
+        </div>
+        <div className="p-4 mb-2 border-b border-gray-100">
+          <div className="flex items-center gap-2 mb-3">
+            <PlusIcon className="w-4 h-4 text-gray-600" />
+            <h3 className="font-semibold text-gray-900">Request Sent</h3>
+          </div>
+          <ScrollArea className="flex-1 h-48">
+            <div className="space-y-2">
+              {sentRequest &&
+                sentRequest.map((user) => (
+                  <UserCard
+                    key={user.requestId}
+                    user={user}
+                    sentRequest={true}
+                    receivedRequest={false}
+                    addRequest={false}
+                  />
+                ))}
+            </div>
+          </ScrollArea>
+        </div>
+        </>
       )}
     </>
   );
