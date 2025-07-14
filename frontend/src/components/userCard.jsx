@@ -2,22 +2,20 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import useChatStore from "../stores/chatStore";
 
 import { Button } from "./ui/button";
-import { Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 
 import useSocketStore from "../stores/socketStore";
+import { useChatSelectors } from "../hooks/useChatSelectors";
 export function UserCard({
   user,
   addRequest,
   sentRequest,
   receivedRequest,
-  handleSearchModeToggle,
 }) {
-  const handleSendReq = (userId) => {
-    useChatStore.getState().setSearchQuery("");
-    useChatStore.getState().setSearchedUsers({ users: [], skip: 0 });
-    useChatStore.getState().setSearchMode("conversations");
-    useSocketStore.getState().requestSend(userId);
-  };
+  const {isUserSelected}=useChatSelectors()
+  const handleAddUser= (userId) => {
+    useChatStore.getState().toggleSelectedUser(userId);
+  }
   const handleUnsend= (requestId)=>{
     useSocketStore.getState().requestUnsend(requestId);
   }
@@ -49,7 +47,7 @@ export function UserCard({
                 {user.fullname}
               </p>
               <p className="font-medium text-gray-400 truncate">
-                {"@" + user.username}
+                {user.isGroup?"Group :"+user.groupName:"@" + user.username}
               </p>
             </div>
           </div>
@@ -58,12 +56,18 @@ export function UserCard({
           <Button
             variant="ghost"
             size="sm"
-            className="rounded-full hover:cursor-pointer bg-green-300 hover:bg-green-400"
+            className={`rounded-full border-2 border-black w-8 h-8 hover:cursor-pointer  ${isUserSelected(user._id)?
+              "bg-green-400 hover:bg-green-400":"bg-blue-300  hover:bg-blue-400"
+              
+            } `}
+            
             onClick={() => {
-              handleSendReq(user._id), handleSearchModeToggle();
+              handleAddUser(user._id);
             }}
           >
-            <Plus className="w-4 h-4" />
+            {isUserSelected(user._id)?
+            <Check className="w-4 h-4" />:
+             <Plus className="w-4 h-4" />} 
           </Button>
         )}
         {receivedRequest && (

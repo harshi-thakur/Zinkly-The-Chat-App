@@ -15,10 +15,9 @@ export function useChatSelectors() {
   const messageHistory = useChatStore((s) => s.messageHistory);
   const searchMode = useChatStore((s) => s.searchMode);
   const messageView = useChatStore((s) => s.messageView);
-  const receivedReq=useChatStore((s)=>s.requests.received);
-  const sentReq=useChatStore((s)=>s.requests.sent);
-
-  
+  const receivedReq = useChatStore((s) => s.requests.received);
+  const sentReq = useChatStore((s) => s.requests.sent);
+  const selectedUsers = useChatStore((s) => s.selectedUsers);
 
   const receivedRequest = useMemo(() => {
     return Object.values(receivedReq).sort((a, b) => {
@@ -26,7 +25,7 @@ export function useChatSelectors() {
       const bTime = b.createdAt || b.sentAt;
       return new Date(bTime).getTime() - new Date(aTime).getTime();
     });
-  },[receivedReq]);
+  }, [receivedReq]);
 
   const sentRequest = useMemo(() => {
     return Object.values(sentReq).sort((a, b) => {
@@ -34,7 +33,7 @@ export function useChatSelectors() {
       const bTime = b.createdAt || b.sentAt;
       return new Date(bTime).getTime() - new Date(aTime).getTime();
     });
-  },[sentReq]);
+  }, [sentReq]);
 
   const sortedRooms = useMemo(() => {
     return Object.values(rooms).sort((a, b) => {
@@ -68,29 +67,29 @@ export function useChatSelectors() {
   );
 
   const filteredRooms = useMemo(() => {
-    if (searchMode!=="conversations"||messageView=="requests") return allRooms;
-    if(searchQuery){
+    if (searchMode !== "conversations" || messageView == "requests") return allRooms;
+    if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return allRooms.filter(
-        (room) =>(messageView!='groups'||room.isGroup) &&
-            (messageView!=='favourites' || room.isFavourite) &&
-          (messageView!=='archive' || room.isArchived) &&
+        (room) => (messageView != 'groups' || room.isGroup) &&
+          (messageView !== 'favourites' || room.isFavourite) &&
+          (messageView !== 'archive' || room.isArchived) &&
           (getRoomDisplayName(room).toLowerCase().includes(query) ||
-          room.lastMessage?.content.toLowerCase().includes(query))
+            room.lastMessage?.content.toLowerCase().includes(query))
       );
-    }else if(messageView=='all'){
+    } else if (messageView == 'all') {
       return allRooms
-    } 
-    else if(messageView=='groups'){
+    }
+    else if (messageView == 'groups') {
       return allRooms.filter((room) => room.isGroup && !room.isArchived);
     }
-    else if(messageView=='favourites'){
+    else if (messageView == 'favourites') {
       return allRooms.filter((room) => room.isFavourite && !room.isArchived);
     }
-    else if(messageView=='archive'){
+    else if (messageView == 'archive') {
       return sortedRooms.filter((room) => room.isArchived);
     }
-  }, [allRooms, searchQuery, getRoomDisplayName,messageView]);
+  }, [allRooms, searchQuery, getRoomDisplayName, messageView]);
 
   const activeRoom = useMemo(() => {
     return activeRoomId ? rooms[activeRoomId] || null : null;
@@ -113,7 +112,10 @@ export function useChatSelectors() {
         return activeRoomMembers.filter((user) => onlineUsers.has(user._id));
       })
       , [activeRoomMembers, onlineUsers]);
-
+  const isUserSelected = useCallback(
+    (userId) => selectedUsers.has(userId),
+    [selectedUsers]
+  );
   const typingUsersInActiveRoom = useMemo(() => {
     const typing = typingUsers[activeRoomId] || [];
     return typing
@@ -177,6 +179,7 @@ export function useChatSelectors() {
     getRoomAvatar,
     getUser,
     isUserOnline,
+    isUserSelected,
     getMessageHistory,
   };
 }

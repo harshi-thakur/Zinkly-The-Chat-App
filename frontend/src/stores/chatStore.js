@@ -37,6 +37,7 @@ const useChatStore = create(
         users: [],
         skip: 0,
       },
+      selectedUsers: new Set(),
       isConnected: false,
       lastActivity: new Date(),
       // Actions
@@ -64,11 +65,12 @@ const useChatStore = create(
       setRooms: (rooms) =>
         set((state) => {
           rooms.forEach((room) => {
+            if (state.rooms[room.id]) return
             socketJoinRoom(room._id);
 
             state.rooms[room._id] = {
               ...room,
-              lastMessage: room.lastMessage ? { ...room.lastMessage, sentAt: new Date(room.lastMessage.sentAt) } : null,
+              lastMessage: room.lastMessage ? { ...room.lastMessage, sentAt: new Date(room.lastMessage.sentAt) } : {sentAt: new Date(room.createdAt)},
               members: room.members.map((member) => {
                 if (!state.users[member._id]) {
                   state.users[member._id] = member
@@ -110,7 +112,15 @@ const useChatStore = create(
         set((state) => {
           const room = state.rooms[roomUpdate._id]
           if (room) {
-            Object.assign(room, roomUpdate)
+            state.rooms[roomUpdate._id] = {
+              ...room,
+              members: roomUpdate.members.map((member) => {
+                if (!state.users[member._id]) {
+                  state.users[member._id] = member
+                }
+                return member._id
+              })
+            }
           }
         }),
 
@@ -156,6 +166,9 @@ const useChatStore = create(
               ...request.receiver,
               requestId: request._id,
               sentAt: new Date(request.sentAt),
+              groupName: request.groupName || "",
+              isGroup: request.isGroup || false,
+              room: request.room || null,
             };
           });
 
@@ -187,9 +200,11 @@ const useChatStore = create(
               ...request.sender,
               requestId: request._id,
               sentAt: new Date(request.sentAt),
+              groupName: request.groupName || "",
+              isGroup: request.isGroup || false,
+              room: request.room || null,
             };
           });
-
           state.requests.received = newReceived;
         }),
 
@@ -269,8 +284,12 @@ const useChatStore = create(
 
       prependMessages: (roomId, messages) =>
         set((state) => {
-          const existingMessages = state.messages[roomId] || []
-          state.messages[roomId] = [...messages, ...existingMessages]
+          const existingMessages = state.messages[roomId] || [];
+          const N = 10;
+          const overlapSegment = existingMessages.slice(0, N);
+          const existingIds = new Set(overlapSegment.map((msg) => msg._id));
+          const filteredMessages = messages.filter((msg) => !existingIds.has(msg._id));
+          state.messages[roomId] = [...filteredMessages, ...existingMessages];
         }),
 
       setUserOnline: (userId, isOnline) =>
@@ -336,7 +355,18 @@ const useChatStore = create(
             room.unreadCount = 0
           }
         }),
-
+      toggleSelectedUser: (userId) =>
+        set((state) => {
+          if (state.selectedUsers.has(userId)) {
+            state.selectedUsers.delete(userId)
+          } else {
+            state.selectedUsers.add(userId)
+          }
+        }),
+      clearSelectedUsers: () =>
+        set((state) => {
+          state.selectedUsers.clear();
+        }),
       setSearchQuery: (query) =>
         set((state) => {
           state.searchQuery = query
@@ -354,7 +384,7 @@ const useChatStore = create(
 
       toggleFeatureRoom: (roomId, feature) =>
         set((state) => {
-         
+
           const room = state.rooms?.[roomId];
           if (!room) return;
 
@@ -374,25 +404,25 @@ const useChatStore = create(
           };
         }),
       setSearchMode: (mode) =>
-      set((state) => {
-        state.searchMode = mode
-      }),
+        set((state) => {
+          state.searchMode = mode
+        }),
       setSearchedUsers: ({ users, hasMore }) =>
-      set((state) => {
-        state.searchedUsers = {
-          users: users,
-          hasMore: hasMore,
-          skip: 0,
-        }
-      }),
+        set((state) => {
+          state.searchedUsers = {
+            users: users,
+            hasMore: hasMore,
+            skip: 0,
+          }
+        }),
       appendSearchedUsers: (users, hasMore) =>
-      set((state) => {
-        state.searchedUsers = {
-          users: [...state.searchedUsers.users, ...users],
-          hasMore: hasMore,
-          skip: state.searchedUsers.skip + users.length
-        }
-      }),
+        set((state) => {
+          state.searchedUsers = {
+            users: [...state.searchedUsers.users, ...users],
+            hasMore: hasMore,
+            skip: state.searchedUsers.skip + users.length
+          }
+        }),
       // Helper methods
       sendMessage: (message) => {
         const { currentUser, addMessage, removeTyping, updateLastActivity } = get()

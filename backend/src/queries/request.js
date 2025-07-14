@@ -15,25 +15,29 @@ export const getRequest = handleDbError(async (requestId) => {
     return await Request.findById(requestId)
         .populate('sender', 'username profilePicture fullname')
         .populate('receiver', 'username profilePicture fullname');
-})
-export const createRequest = handleDbError(async (senderId, receiverId) => {
+});
 
-    let request = await Request.findOne({ sender: senderId, receiver: receiverId }).populate('sender', 'username profilePicture fullname')
-        .populate('receiver', 'username profilePicture fullname');
-    
-    if(request) return request
-  
-    request = new Request({
+export const isRequestExistsForDirect = handleDbError(async (senderId, receiverId) => {
+    const request = await Request.findOne({ sender: senderId, receiver: receiverId, isGroup: false }).populate('sender', 'username profilePicture fullname')
+        .populate('receiver', 'username profilePicture fullname');;
+    return request;
+});
+
+export const createRequest = handleDbError(async (senderId, receiverId,roomId,groupName) => {
+    const request = new Request({
         sender: senderId,
         receiver: receiverId,
+        isGroup: roomId ? true : false,
+        room: roomId,
+        groupName: groupName || "",
     });
     await request.save();
     return await request.populate([
     { path: 'sender', select: 'username fullname profilePic' },
     { path: 'receiver', select: 'username fullname profilePic' },
-  ]);
-       
+  ]);  
 });
+
 
 export const deleteRequest = handleDbError(async (requestId) => {
     const request = await Request.findByIdAndDelete(requestId);

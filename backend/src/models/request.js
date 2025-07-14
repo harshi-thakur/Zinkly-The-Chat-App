@@ -6,16 +6,29 @@ const requestSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
-    receiver: {
+    receiver:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: true,
     },
     sentAt:{
         type:Number,
         default: Date.now,
         immutable: true
-    }
+    },
+    room:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Room',
+    },
+    isGroup: {
+        type: Boolean,
+        default: false
+    },
+    groupName: {
+        type: String,
+        trim: true,
+        default: ""
+    },
 },{
     timestamps: false});
 const Request = mongoose.models.Request || mongoose.model('Request', requestSchema);

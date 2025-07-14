@@ -101,9 +101,9 @@ const useSocketStore = create((set, get) => ({
       SocketServiceInstance.requestAccept(requestId);
     } catch (err) {}
   },
-  requestSend: (userId) => {
+  requestSend: (userIds,groupName) => {
     try {
-      SocketServiceInstance.requestSend(userId);
+      SocketServiceInstance.requestSend(userIds,groupName);
     } catch (err) {}
   },
   requestReject: (requestId) => {

@@ -25,8 +25,8 @@ export const searchUser = async (req, res) => {
         if (!SearchQuery) {
             return res.status(400).json({ error: "Search query is required" });
         }
-        const dontInclude= await getFriends(req.user.id);
-        const searchedUsers = await getUsersByName(SearchQuery,skip,dontInclude);
+        // const dontInclude= await getFriends(req.user.id);
+        const searchedUsers = await getUsersByName(SearchQuery,skip,[req.user.id]);
         return res.status(200).json(searchedUsers);
     } catch (e) {
         console.log("Error in searchUser controller " + e.message);

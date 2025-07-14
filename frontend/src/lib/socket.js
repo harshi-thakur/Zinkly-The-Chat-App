@@ -99,6 +99,9 @@ export class SocketService {
     this.socket.on("request:accepted", ({room,requestId}) => {
       useChatStore.getState().removeSentRequest(requestId);
       useChatStore.getState().setRooms([room]);
+      if(room.isGroup){
+      useChatStore.getState().updateRoom({_id:room._id,members:room.members});
+      }
       room.members.forEach((member) => {
         useChatStore.getState().setUserOnline(member._id, member.isOnline);
       });
@@ -108,7 +111,8 @@ export class SocketService {
       useChatStore.getState().setReceivedRequest([request]);
     })
 
-    this.socket.on("request:sent",({request})=>{
+    this.socket.on("request:sent",({request,room})=>{
+      if(room) useChatStore.getState().setRooms([room])
       useChatStore.getState().setSentRequest([request]);
     })
 
@@ -204,9 +208,9 @@ export class SocketService {
     this.socket.emit("request:accept", {requestId})
   }
 
-  requestSend(userId){
+  requestSend(userIds, groupName) {
      if (!this.socket?.connected) return
-    this.socket.emit("request:send", {userId})
+    this.socket.emit("request:send", {userIds, groupName})
   }
 
   requestReject(requestId){

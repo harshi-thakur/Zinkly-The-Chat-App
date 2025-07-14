@@ -8,7 +8,6 @@ export const createRoomByUserId = handleDbError(async (roomData) => {
   await newRoom.populate([
     { path: 'members', select: 'username fullname profilePic' },
     { path: 'lastMessage' },
-    { path: 'groupSettings', select: 'groupName groupImage createdBy admins' },
   ]);
   return newRoom;
 });
@@ -53,7 +52,7 @@ export const getRoomByUserId = handleDbError(async (userId, roomId) => {
 
 export const getFriends = handleDbError(async (userId) => {
   const rooms = await Room.find(
-    { isGroup: false, members: userId},
+    { isGroup: false, members: userId },
     'members'
   ).lean();
 
@@ -65,6 +64,25 @@ export const getFriends = handleDbError(async (userId) => {
   });
   return allMembers;
 })
+export const areFriends = handleDbError(async (userIds) => {
+  return Room.find({
+    isGroup: false,
+    members: { $all: userIds, $size: 2 }
+  });
+})
+
+export const addMemberToRoom = handleDbError(async (roomId, userId) => {
+  const room = await Room.findOne({ _id: roomId, isGroup: true });
+  if(!room) return null;
+  room.members.addToSet(userId);
+  await room.save();
+  await room.populate([
+    { path: 'members', select: 'username fullname profilePic' },
+    { path: 'lastMessage' },
+  ]);
+  return room;
+});
+
 export const isValidRoomId = handleDbError(async (roomId, userId) => {
   return await Room.exists({ _id: roomId, members: userId });
 });
