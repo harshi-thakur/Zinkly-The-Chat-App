@@ -6,6 +6,7 @@ import { useChatSelectors } from "../hooks/useChatSelectors";
 import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
 import { useMessageInput } from "../hooks/useMessageInput";
 import { useEffect } from "react";
+import MessageCard from "./messageCard";
 const ChatScrollArea = () => {
   const {
     currentUser,
@@ -24,32 +25,6 @@ const ChatScrollArea = () => {
     activeRoom?._id || null
   );
   let lastMessageDate = null;
-  const formatTime = (date) => {
-    return date
-      ? date.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })
-      : "nothing";
-  };
-
-  const formatMessageTime = (date) => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    
-    if (msgDate.getTime() === today.getTime()) {
-      return "Today";
-    } else if (msgDate.getTime() === yesterday.getTime()) {
-      return "Yesterday";
-    } else  {
-      return date.toDateString().slice(0,15);
-    }
-  }
-    
 
   useEffect(() => {
     if (activeRoomMessages.length > 0) {
@@ -69,89 +44,36 @@ const ChatScrollArea = () => {
         <div className="space-y-6">
           {activeRoomMessages.map((msg, index) => {
             const isOwnMessage = msg.sender === currentUser._id;
-            const sender = isOwnMessage
-              ? currentUser
-              : getUser(msg.sender);
-             const showDateSeparator = msg.sentAt.toDateString()!==lastMessageDate?.toDateString();
-              lastMessageDate = msg.sentAt;
-              const showAvatar =
+            const sender = isOwnMessage ? currentUser : getUser(msg.sender);
+            const showDateSeparator =
+              msg.sentAt.toDateString() !== lastMessageDate?.toDateString();
+            lastMessageDate = msg.sentAt;
+            const showAvatar =
               !isOwnMessage &&
               (index === 0 ||
-                activeRoomMessages[index - 1].sender !== msg.sender||showDateSeparator);
-             
+                activeRoomMessages[index - 1].sender !== msg.sender ||
+                showDateSeparator);
 
             return (
-              <div
-                key={msg._id}>
-                  {showDateSeparator && (
-        <div className="text-center my-4 text-sm text-gray-500 font-medium">
-          {formatMessageTime(msg.sentAt)}
-        </div>
-      )}
-                <div className={`flex ${
-                  isOwnMessage ? "justify-end" : "items-start gap-3"
-                }`}
-              >
-                {!isOwnMessage && (
-                  <div className="w-8">
-                    {showAvatar && (
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage
-                          src={sender?.profilePic || "/placeholder.svg"}
-                        />
-                        <AvatarFallback className="bg-blue-500 text-white">
-                          {sender?.fullname
-                            ?.split(" ")
-                            .map((n) => n[0])
-                            .join("") || "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
-                )}
-
-                <div
-                  className={`flex-1 ${isOwnMessage ? "flex justify-end" : ""}`}
-                >
-                  {!isOwnMessage && showAvatar && (
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-gray-900">
-                        {sender?.fullname || "Unknown User"}
-                      </span>
-                    </div>
-                  )}
-
-                  <div
-                    className={`rounded-2xl px-4 py-2 max-w-md ${
-                      isOwnMessage
-                        ? "bg-green-200 rounded-br-md"
-                        : "bg-gray-100 rounded-tl-md"
-                    }`}
-                  >
-                    {msg.isDeleted ? (
-                      <p className="text-sm text-gray-500 italic">
-                        {msg.content}
-                      </p>
-                    ) : (
-                      <p className="text-sm text-gray-800">{msg.content}</p>
-                    )}
-                    <p className="text-xs text-gray-600 mt-1">
-                      {formatTime(msg.sentAt)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              </div>
+              <MessageCard
+                key={msg._id}
+                msg={msg}
+                showDateSeparator={showDateSeparator}
+                showAvatar={showAvatar}
+                sender={sender}
+                isOwnMessage={isOwnMessage}
+              />
             );
           })}
 
           {/* Typing indicators */}
           {typingUsersInActiveRoom.length > 0 && (
-            
             <div className="flex items-start gap-3">
               <Avatar className="w-8 h-8">
                 <AvatarImage
-                  src={typingUsersInActiveRoom[0].profilePic || "/placeholder.svg"}
+                  src={
+                    typingUsersInActiveRoom[0].profilePic || "/placeholder.svg"
+                  }
                 />
                 <AvatarFallback className="bg-purple-500 text-white">
                   {typingUsersInActiveRoom[0].fullname

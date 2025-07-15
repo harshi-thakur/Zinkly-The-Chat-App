@@ -1,5 +1,5 @@
 import Room from "../../models/room.js";
-import { createMessage } from "../../queries/message.js";
+import { createMessage, updateMessage } from "../../queries/message.js";
 import { updateRoomById } from "../../queries/room.js";
 import { debounce } from "../managers/debounceTimers.js";
 import { isUserOnline } from "../managers/onlineUsers.js";
@@ -7,7 +7,12 @@ const MAX_TIME_LIMIT= 5*60*1000;
 
 export const  registerMessageHandlers = (io, socket)=>{
   socket.on("message:send", (data)=> onsendMessage(io,socket,data));
-  // socket.on("updateLastMessage",(data)=>onUpdateLastMessage(io,socket,data));
+  socket.on("message:delete", ({messageId, roomId})=>{
+    if(!messageId||!roomId) return;
+    const success=updateMessage(messageId,socket.user.id,{isDeleted:true});
+    if(!success) return socket.emit("error", {message:"Message Not Found"});
+    socket.to(roomId).emit("message:deleted", {messageId,roomId});
+  });
 };
 
 

@@ -69,9 +69,8 @@ export class SocketService {
       this.emit("message:updated", data)
     })
 
-    this.socket.on("message:deleted", (data) => {
-      console.log("🗑️ Message deleted:", data)
-      this.emit("message:deleted", data)
+    this.socket.on("message:deleted", ({messageId,roomId}) => {
+      useChatStore.getState().deleteMessage(messageId, roomId);
     })
 
     this.socket.on("message:delivered", ({tempId,message}) => {
@@ -172,7 +171,7 @@ export class SocketService {
 
   deleteMessage(messageId, roomId) {
     if (!this.socket?.connected) return
-
+    useChatStore.getState().deleteMessage(messageId, roomId);
     this.socket.emit("message:delete", { messageId, roomId })
   }
 
