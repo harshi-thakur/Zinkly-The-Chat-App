@@ -51,9 +51,16 @@ const MessageCard = ({
           isOwnMessage ? "justify-end" : "justify-start gap-3"
         }`}
       >
-        {/* Avatar */}
-        {!isOwnMessage && (
-          <div className="w-8">
+  
+
+        <div
+          className={`flex  ${isOwnMessage ? " justify-end" : "justify-start"}`}
+        >
+          <div className="flex flex-col gap-1">
+            {/* Sender Name */}
+            {!isOwnMessage && showAvatar && (
+              <div className="flex items-center w-fit gap-2 mb-1">
+              <div className="w-8">
             {showAvatar && (
               <Avatar className="w-8 h-8">
                 <AvatarImage src={sender?.profilePic || "/placeholder.svg"} />
@@ -66,19 +73,12 @@ const MessageCard = ({
               </Avatar>
             )}
           </div>
-        )}
-
-        <div
-          className={`flex ${isOwnMessage ? " justify-end" : "justify-start"}`}
-        >
-          <div className="flex flex-col gap-1">
-            {/* Sender Name */}
-            {!isOwnMessage && showAvatar && (
               <div className="flex items-center w-fit gap-2 mb-1">
                 <span className="font-semibold text-gray-900">
                   {sender?.fullname || "Unknown User"}
                 </span>
               </div>
+            </div>
             )}
 
             {/* Message bubble wrapper */}
@@ -120,7 +120,7 @@ const MessageCard = ({
 
               {/* Message text */}
               <p
-                className={`text-sm break-words ${
+                className={`text-sm break-words max-w-[40dvh] ${
                   msg.isDeleted ? "text-gray-500 italic" : "text-gray-800"
                 }`}
               >
