@@ -44,3 +44,11 @@
     transform: translateY(-15px);
   }
 }
+
+
+@media screen and (max-width: 1024px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+  .force-mobile * {
+    all: unset !important;
+    display: revert !important;
+  }
+}

@@ -2,7 +2,6 @@ import { Button } from "../components/ui/button";
 import {
   Menu,
   ArrowLeft,
-  MoreHorizontal,
   Users,
   ArchiveIcon,
   ArchiveRestore,
@@ -160,12 +159,6 @@ export function MobileHeader({ onMenuClick }) {
             onClick={handleUsersClick}
           >
             <Users className="w-4 h-4" />
-          </Button>
-        )}
-
-        {showChatActions && (
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <MoreHorizontal className="w-4 h-4" />
           </Button>
         )}
       </div>

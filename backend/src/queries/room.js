@@ -36,8 +36,12 @@ export const getRoomsByUserId = handleDbError(async (userId, limit = 10) => {
       path: 'groupSettings',
       select: 'groupName groupImage createdBy admins',
     });
-
-  return rooms;
+    return rooms.map((room) => {
+    if (room.lastMessage?.isDeleted) {
+      room.lastMessage.content = '';
+    }
+    return room;
+    });
 });
 export const getRoomIdsByUserId = handleDbError(async (userId) => {
   const rooms = await Room.find({ members: userId }).select('_id');

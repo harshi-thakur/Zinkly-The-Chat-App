@@ -92,8 +92,8 @@ export default function ChatApp() {
     );
   }
 
-  return (
-    <div className="flex h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-orange-50">
+  return (<div className="force-mobile">
+    <div className="flex h-[100dvh] bg-gradient-to-br from-purple-100 via-pink-50 to-orange-50">
       {/* Mobile Layout */}
       <div className="flex flex-col w-full md:hidden">
         {/* Mobile Header */}
@@ -284,6 +284,7 @@ export default function ChatApp() {
           <ChatList />
         </div>
       </div>
+    </div>
     </div>
   );
 }
