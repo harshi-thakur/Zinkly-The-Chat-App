@@ -120,7 +120,7 @@ const MessageCard = ({
 
               {/* Message text */}
               <p
-                className={`text-sm break-words max-w-[40dvh] ${
+                className={`text-sm break-words max-w-[50dvw] ${
                   msg.isDeleted ? "text-gray-500 italic" : "text-gray-800"
                 }`}
               >

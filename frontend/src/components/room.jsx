@@ -70,7 +70,7 @@ export function Room({ room }) {
             )}
           </div>
         </div>
-        <p className="text-sm text-gray-600 w-1/2  truncate">
+        <p className="text-sm text-gray-600 w-1/3  truncate">
           {room.lastMessage?.content || "No messages yet"}
         </p>
       </div>
